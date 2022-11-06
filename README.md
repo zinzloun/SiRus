@@ -1,17 +1,18 @@
-#SiRuS
-ver. 1.0
+# SiRuS
+ver. 1.0<br>
 A simple, yet sample, **TLS webshell in Rust**. The aim of this project is to learn Rust doing something fun, so it has to be intended as an experiment, of course feel free to fork it to improve it, also suggestions to improve the code are really appreciated.
-<hr>
-##How does it work
+
+## How does it work
 Just lunch the compiled executable **sirus** passing the certificate (PKCS#12 format) password as parameter: **sirus Zinz#72**. The certificate is embedded as binary resource, of course you can change it to include your own certificate, that must be placed in the **src** folder, at the same level of the source file main.rs, then change the string literal ("zinz.pfx") around line 80.
 The server listens to the port **8443** on all IPV4 available interfaces, you can change this value around line 17 of main.rs. 
 Once the server is running you can issue command passing the command name in a canonical URL format:
 **https://\<IP>:8443/\<cmd>** e.g. https://127.0.0.1:8443/systeminfo. The parameter is decoded and executed against the server OS and the output, eventually the error, is returned to the web page into the TLS stream.
-<hr>
-##Compiling the software
+
+## Compiling the software
 The software has been compiled on
 -  Microsoft Windows 11 Education
 10.0.22621 N/D build 22621 (X64)
+
 ```bash
 cargo b
    Compiling lazy_static v1.4.0
@@ -23,7 +24,9 @@ cargo b
    Compiling sirus v0.1.0 (C:\Users\*******\source\rust\sirus)
     Finished dev [unoptimized + debuginfo] target(s) in 12.11s
 ```
+
 - Ubuntu 22.04.1 LTS (Jammy Jellyfish) X64
+
 ```bash
 cargo b
    Compiling pkg-config v0.3.25
@@ -56,11 +59,12 @@ If you want to run the program with cargo use the following syntax to pass the p
 ```bash
 cargo r -- Zinz#72
 ```
-###Dependencies
+
+### Dependencies
 - urlencoding
 - native-tls
 
-###Notes
+### Notes
 I used **Openssl 3.0.2** to create the pfx file, since I had issues having previously created the certificates with the 1.1 version, once I run the software on Ubuntu, due to the obsolete crypto security stack implemented.  
 On Ubuntu you must have installed the following package:
 - pkg-config
