@@ -60,7 +60,7 @@ If you want to run the program with cargo use the following syntax to pass the p
 cargo r -- Zinz#72
 ```
 
-### Dependencies
+### Dependencies crates
 - urlencoding
 - native-tls
 
