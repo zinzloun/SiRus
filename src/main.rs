@@ -85,7 +85,7 @@ fn load_cert(password: &str)-> Result<Identity, native_tls::Error> {
 
 }
 
-// the logic fo the webshelle
+// webshell logic
 fn handle_connection(mut stream: TlsStream<TcpStream>) {
 
 
