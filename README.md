@@ -1,7 +1,8 @@
 # SiRuS
 A simple, yet sample, **TLS webshell in Rust**.
-##ver. 2.0 
-- Now commands are sent using POST reques
+
+## ver. 2.0 
+- Now commands are sent using POST request
 
 ## How does it work
 Just lunch the compiled executable **sirus** passing the certificate (PKCS#12 format) password as parameter: **sirus Zinz#72**. The certificate is embedded as binary resource, of course you can change it to include your own certificate, that must be placed in the **src** folder, at the same level of the source file main.rs, then change the string literal ("zinz.pfx") around line 80.
