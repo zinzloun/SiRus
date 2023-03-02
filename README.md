@@ -56,7 +56,7 @@ $cargo b
 
 ```
 
-The TLS connection is manged with the [crate native-tls](https://crates.io/crates/native-tls), that uses **SChannel on Windows** (via the schannel crate) and **OpenSSL** (via the openssl crate) on Ubuntu.
+The TLS connection is manged with the [crate native-tls](https://crates.io/crates/native-tls), that uses **SChannel on Windows** (via the schannel crate) and **OpenSSL** (via the openssl crate) on Parrot OS.
 If you want to run the program with cargo use the following syntax to pass the password certificate parameter:
 ```bash
 cargo r -- Zinz#72
